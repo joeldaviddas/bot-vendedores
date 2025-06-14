@@ -47,20 +47,33 @@ export class Database {
             // Verificar si ya existe
             const existe = this.db.vendedores.some(v => v.numero === numero);
             if (existe) {
-                return 'El vendedor ya está registrado.';
+                return 'Este número ya está registrado.';
+            }
+
+            // Validar número y obtener información del país
+            const validacion = await this.validatePhoneNumber(numero);
+            if (!validacion.isValid) {
+                return validacion.error;
             }
 
             // Verificar si está bloqueado
-            const bloqueado = this.db.bloqueados.includes(numero);
-            if (bloqueado) {
-                return 'Este número está bloqueado y no puede registrarse.';
+            if (this.db.bloqueados.includes(numero)) {
+                return 'Este número está bloqueado.';
             }
 
-            // Registrar nuevo vendedor
-            this.db.vendedores.push({ nombre, numero, fechaRegistro: new Date().toISOString() });
+            // Registrar con información del país
+            this.db.vendedores.push({
+                nombre,
+                numero,
+                pais: validacion.country,
+                codigoPais: validacion.countryCode,
+                fechaRegistro: new Date().toISOString(),
+                estado: 'activo'
+            });
+
+            // Guardar cambios
             await fs.writeJSON(this.dbPath, this.db);
-            
-            return `Vendedor ${nombre} (${numero}) registrado exitosamente.`;
+            return `Vendedor registrado exitosamente. País: ${validacion.country}`;
         } catch (error) {
             console.error('Error al registrar vendedor:', error);
             throw error;
@@ -121,6 +134,18 @@ export class Database {
             return `Lista de vendedores:\n${lista}`;
         } catch (error) {
             console.error('Error al obtener lista de vendedores:', error);
+            throw error;
+        }
+    }
+
+    async obtenerVendedoresPorNombre(nombre) {
+        try {
+            await this.init();
+            return this.db.vendedores.filter(v => 
+                v.nombre.toLowerCase().includes(nombre.toLowerCase())
+            );
+        } catch (error) {
+            console.error('Error al buscar vendedores por nombre:', error);
             throw error;
         }
     }

@@ -1,15 +1,18 @@
 import { validatePhoneNumber } from '../utils/validation.js';
 import { createSticker } from '../utils/stickerGenerator.js';
+import { MenuHandler } from '../utils/menuHandler.js';
 
 export class CommandHandler {
     constructor() {
+        this.menuHandler = new MenuHandler();
         this.commands = {
             '/verificar': this.verificarVendedor,
             '/ban': this.banVendedor,
             '/unban': this.unbanVendedor,
             '/sticker': this.crearSticker,
             '/lista': this.mostrarLista,
-            '/help': this.mostrarAyuda
+            '/help': this.mostrarAyuda,
+            '/menu': this.mostrarMenu
         };
     }
 
@@ -19,6 +22,13 @@ export class CommandHandler {
             const handler = this.commands[command.toLowerCase()];
 
             if (!handler) {
+                // Verificar si es un número para el menú
+                const number = parseInt(command);
+                if (!isNaN(number)) {
+                    await this.menuHandler.handleNumberInput(message, client);
+                    return;
+                }
+
                 await client.sendText(message.from, 'Comando no reconocido. Escribe /help para ver los comandos disponibles.');
                 return;
             }
@@ -28,6 +38,10 @@ export class CommandHandler {
             console.error('Error al ejecutar comando:', error);
             await client.sendText(message.from, 'Error al ejecutar el comando. Por favor, intenta de nuevo.');
         }
+    }
+
+    async mostrarMenu(message, client) {
+        await this.menuHandler.showPrincipalMenu(message, client);
     }
 
     async verificarVendedor(message, client, db, args) {
@@ -40,7 +54,7 @@ export class CommandHandler {
             const nombre = args[0];
             const numero = args[1];
 
-            if (!validatePhoneNumber(numero)) {
+            if (!await db.validatePhoneNumber(numero)) {
                 await client.sendText(message.from, 'Número de teléfono inválido. Debe ser un número con código de país.');
                 return;
             }
@@ -66,7 +80,7 @@ export class CommandHandler {
             }
 
             const numero = args[0];
-            if (!validatePhoneNumber(numero)) {
+            if (!await db.validatePhoneNumber(numero)) {
                 await client.sendText(message.from, 'Número de teléfono inválido.');
                 return;
             }
@@ -92,7 +106,7 @@ export class CommandHandler {
             }
 
             const numero = args[0];
-            if (!validatePhoneNumber(numero)) {
+            if (!await db.validatePhoneNumber(numero)) {
                 await client.sendText(message.from, 'Número de teléfono inválido.');
                 return;
             }
