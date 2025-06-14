@@ -1,0 +1,45 @@
+{
+  "ventas": [
+    {
+      "id": 1749872135404,
+      "cliente": "Andres",
+      "monto": 5000,
+      "fecha": "13/6/2025, 22:35:35"
+    }
+  ],
+  "vendedores": [
+    {
+      "id": 1749870507860,
+      "nombre": "Mega",
+      "telefono": "Streaming",
+      "fecha": "13/6/2025, 22:08:27"
+    },
+    {
+      "id": 1749871186281,
+      "nombre": "ecua593streamin",
+      "telefono": "+593",
+      "fecha": "13/6/2025, 22:19:46"
+    }
+  ],
+  "reportes": [
+    {
+      "id": 1749870584196,
+      "numero": "+593",
+      "motivo": "99 024 4402 no me dio una cuenta nopor",
+      "fecha": "13/6/2025, 22:09:44"
+    },
+    {
+      "id": 1749870661937,
+      "numero": "‪+593990244402‬",
+      "motivo": "vendedor no autorizado por favor revisen",
+      "fecha": "13/6/2025, 22:11:01"
+    },
+    {
+      "id": 1749911159811,
+      "numero": "+593990244402",
+      "motivo": "me vale verga elimínelo JJAJ",
+      "fecha": "14/6/2025, 9:25:59"
+    }
+  ],
+  "banned": []
+}
