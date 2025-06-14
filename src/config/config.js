@@ -1,7 +1,8 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs-extra';
 
-const path = require('path');
-const fs = require('fs-extra');
+dotenv.config();
 
 const CONFIG = {
     // Directorios
@@ -29,26 +30,36 @@ const CONFIG = {
 
 // Crear directorios si no existen
 async function createDirectories() {
-    const dirs = Object.values(CONFIG.directories);
-    for (const dir of dirs) {
-        await fs.ensureDir(path.resolve(__dirname, '..', dir));
+    try {
+        const dirs = Object.values(CONFIG.directories);
+        for (const dir of dirs) {
+            await fs.ensureDir(path.resolve(__dirname, '..', dir));
+        }
+    } catch (error) {
+        console.error('Error al crear directorios:', error);
+        throw error;
     }
 }
 
 // Inicializar base de datos
 async function initDatabase() {
-    const dbPath = path.resolve(__dirname, '..', CONFIG.directories.data, 'database.json');
-    if (!await fs.pathExists(dbPath)) {
-        await fs.writeJSON(dbPath, {
-            vendedores: [],
-            bloqueados: [],
-            logs: [],
-            lastImages: {}
-        });
+    try {
+        const dbPath = path.resolve(__dirname, '..', CONFIG.directories.data, 'database.json');
+        if (!await fs.pathExists(dbPath)) {
+            await fs.writeJSON(dbPath, {
+                vendedores: [],
+                bloqueados: [],
+                logs: [],
+                lastImages: {}
+            });
+        }
+    } catch (error) {
+        console.error('Error al inicializar base de datos:', error);
+        throw error;
     }
 }
 
-module.exports = {
+export {
     CONFIG,
     createDirectories,
     initDatabase

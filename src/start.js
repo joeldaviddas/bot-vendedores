@@ -1,6 +1,6 @@
-const { CONFIG, createDirectories, initDatabase } = require('./config/config');
-const { Bot } = require('./bot/bot');
-const path = require('path');
+import { CONFIG, createDirectories, initDatabase } from './config/config.js';
+import { Bot } from './bot/bot.js';
+import path from 'path';
 
 async function main() {
     try {

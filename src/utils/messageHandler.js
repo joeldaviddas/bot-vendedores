@@ -1,4 +1,4 @@
-const { Database } = require('./database');
+import { Database } from './database.js';
 
 export class MessageHandler {
     constructor() {
@@ -22,6 +22,7 @@ export class MessageHandler {
 
         } catch (error) {
             console.error('Error al procesar mensaje:', error);
+            await client.sendText(message.from, 'Error al procesar el mensaje. Por favor, intenta de nuevo.');
         }
     }
 
@@ -43,6 +44,7 @@ export class MessageHandler {
 
         } catch (error) {
             console.error('Error al manejar palabra clave:', error);
+            await client.sendText(message.from, 'Error al procesar la palabra clave. Por favor, intenta de nuevo.');
         }
     }
 }

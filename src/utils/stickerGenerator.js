@@ -1,9 +1,20 @@
-const sharp = require('sharp');
-const fs = require('fs-extra');
-const path = require('path');
+import sharp from 'sharp';
+import fs from 'fs-extra';
+import path from 'path';
 
 export async function createSticker(imagePath) {
     try {
+        // Verificar si la imagen existe
+        if (!await fs.pathExists(imagePath)) {
+            throw new Error('La imagen no existe en el sistema.');
+        }
+
+        // Verificar si es un archivo válido
+        const stats = await fs.stat(imagePath);
+        if (!stats.isFile()) {
+            throw new Error('El camino especificado no es un archivo válido.');
+        }
+
         // Cargar imagen
         const image = sharp(imagePath);
         
@@ -23,8 +34,15 @@ export async function createSticker(imagePath) {
             alphaQuality: 100
         }).toBuffer();
 
+        // Crear directorio de imágenes si no existe
+        const imagesDir = path.resolve(__dirname, '..', '..', CONFIG.directories.images);
+        await fs.ensureDir(imagesDir);
+
+        // Generar nombre único para el sticker
+        const timestamp = Date.now();
+        const stickerPath = path.join(imagesDir, `sticker_${timestamp}.webp`);
+        
         // Guardar sticker
-        const stickerPath = path.join(CONFIG.directories.images, 'sticker.webp');
         await fs.writeFile(stickerPath, buffer);
         
         return {
