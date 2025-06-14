@@ -1,6 +1,6 @@
 // flujos.js — Control de flujos paso a paso de conversación
-const { registrarVenta } = require('./ventas');
-const { database } = require('./utils');
+const { registrarVenta } = require('../commands/ventas');
+const { database } = require('../utils/utils');
 
 const conversationStates = new Map();
 

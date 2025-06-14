@@ -3,15 +3,15 @@ const wppconnect = require('@wppconnect-team/wppconnect');
 const path = require('path');
 const fs = require('fs');
 
-const { cargarBase, logError, obtenerFechaLocal, database } = require('./utils');
-const { ejecutarComando } = require('./comandos');
+const { cargarBase, logError, obtenerFechaLocal, database } = require('../utils/utils');
+const { ejecutarComando } = require('../commands/comandos');
 const { manejarPaso, tieneFlujo } = require('./flujos');
-const { obtenerMentions, agregarVendedor } = require('./vendedores');
+const { obtenerMentions, agregarVendedor } = require('../commands/vendedores');
 
 const SESSION_NAME = 'bot-vendedor';
 const CHROME_PATH = '/home/codespace/.cache/puppeteer/chrome/linux-121.0.6167.85/chrome-linux64/chrome';
-const ACTIVATION_IMAGE = './bot_activado.png';
-const STICKER_PATH = './imagen-estafado.png';
+const ACTIVATION_IMAGE = path.join(__dirname, '../images/bot_activado.png');
+const STICKER_PATH = path.join(__dirname, '../images/imagen-estafado.png');
 const PREFIX = '!';
 const GROUP_NAME = 'VENDEDORES VERIFICADOS';
 
