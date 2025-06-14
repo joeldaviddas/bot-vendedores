@@ -147,7 +147,34 @@ export class CommandHandler {
 
     async mostrarAyuda(message, client) {
         try {
-            await client.sendText(message.from, CONFIG.messages.help);
+            const ayuda = `
+📌 *Ayuda - Vendedores de Streaming*
+
+👤 *Comandos de Vendedor:*
+/actualizar - Actualizar información
+/categoria - Ver o cambiar categoría
+/estadisticas - Ver tus estadísticas
+
+👥 *Comandos de Admin:*
+/ban - Bloquear vendedor
+/unban - Desbloquear vendedor
+/lista - Mostrar lista de vendedores
+/estadisticas - Ver estadísticas del grupo
+
+📝 *Formatos:*
+1 *nombre* *número* - Registro
+/categoria *nombre* - Cambiar categoría
+/actualizar *nombre* *número* - Actualizar datos
+
+💡 *Recuerda:*
+- No hay comisiones, solo conectamos vendedores con clientes
+- Mantén un comportamiento profesional
+- Respeta a los demás vendedores
+- No hacer spam
+- Ser transparente con tus precios
+- Este es un espacio para vendedores de streaming
+`;
+            await client.sendText(message.from, ayuda);
         } catch (error) {
             console.error('Error al mostrar ayuda:', error);
             await client.sendText(message.from, 'Error al mostrar la ayuda. Por favor, intenta de nuevo.');

@@ -67,12 +67,19 @@ export class Database {
                 numero,
                 pais: validacion.country,
                 codigoPais: validacion.countryCode,
+                categoria: CONFIG.categoriaDefault,
                 fechaRegistro: new Date().toISOString(),
-                estado: 'activo'
+                estado: 'activo',
+                estadisticas: {
+                    mensajes: 0,
+                    imagenes: 0,
+                    interacciones: 0,
+                    ultimaInteraccion: null
+                }
             });
 
             // Guardar cambios
-            await fs.writeJSON(this.dbPath, this.db);
+            await this.save();
             return `Vendedor registrado exitosamente. País: ${validacion.country}`;
         } catch (error) {
             console.error('Error al registrar vendedor:', error);

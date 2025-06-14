@@ -26,6 +26,14 @@ export class MessageHandler {
                 await this.handleNuevoMiembro(message, client);
             }
 
+            // Actualizar estadísticas del vendedor
+            if (message.fromMe) return; // Ignorar mensajes del bot
+            
+            const vendedor = await this.db.obtenerVendedorPorNumero(message.from);
+            if (vendedor) {
+                await this.actualizarEstadisticas(vendedor, message);
+            }
+
         } catch (error) {
             console.error('Error al procesar mensaje:', error);
             await client.sendText(message.from, 'Error al procesar el mensaje. Por favor, intenta de nuevo.');
@@ -86,6 +94,33 @@ Para registrarte, por favor responde con:
         } catch (error) {
             console.error('Error al manejar nuevo miembro:', error);
             await client.sendText(message.from, 'Error al procesar tu registro. Por favor, intenta de nuevo.');
+        }
+    }
+
+    async actualizarEstadisticas(vendedor, message) {
+        try {
+            // Actualizar estadísticas del vendedor
+            await this.db.init();
+            const index = this.db.vendedores.findIndex(v => v.numero === vendedor.numero);
+            if (index !== -1) {
+                // Actualizar mensajes
+                this.db.vendedores[index].estadisticas.mensajes++;
+                
+                // Actualizar imágenes si es imagen
+                if (message.type === 'image') {
+                    this.db.vendedores[index].estadisticas.imagenes++;
+                }
+
+                // Actualizar interacciones
+                this.db.vendedores[index].estadisticas.interacciones++;
+                this.db.vendedores[index].estadisticas.ultimaInteraccion = new Date().toISOString();
+
+                // Guardar cambios
+                await this.db.save();
+            }
+        } catch (error) {
+            console.error('Error al actualizar estadísticas:', error);
+            throw error;
         }
     }
 }
