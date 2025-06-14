@@ -1,104 +1,64 @@
-# 🤖 Bot de Gestión de Vendedores para WhatsApp
+# JoelBot - Bot de Gestión de Vendedores de Streaming
 
-Un bot de WhatsApp diseñado para la gestión de vendedores, registro de ventas y generación de reportes automáticos.
+Bot de WhatsApp diseñado específicamente para la gestión de grupos de ventas de streaming. Automatiza la gestión de vendedores, clientes y prevención de fraudes.
 
 ## 🚀 Características
 
-- Registro de vendedores
-- Gestión de ventas
-- Generación de reportes
-- Notificaciones automáticas
-- Soporte para múltiples grupos
-- Reinicio automático en caso de errores
+- 🤖 Gestión completa de vendedores (registro, bloqueo/desbloqueo)
+- 📝 Comandos personalizados con prefijo `/`
+- 📸 Soporte para stickers y gestión de imágenes
+- 📊 Base de datos local con logs
+- 🛡️ Prevención de fraudes
+- 🔄 Auto-reinicio en caso de fallos
+- 🌐 Optimizado para GitHub Codespaces
 
-## 📋 Requisitos
+## 📋 Comandos Disponibles
 
-- Node.js >= 16.0.0
-- npm >= 7.0.0
-- Una cuenta de WhatsApp
-- Acceso a WhatsApp Web
+- `/verificar nombre número` - Registra un nuevo vendedor
+- `/ban número` - Bloquea a un vendedor (solo admins)
+- `/unban número` - Desbloquea un vendedor
+- `/sticker` - Crea sticker de la última imagen
+- `/lista` - Muestra lista de vendedores
+- `/help` - Muestra esta ayuda
 
-## 🛠 Instalación
+## 🛠️ Instalación
 
 1. Clona el repositorio:
-   ```bash
-   git clone https://github.com/tu-usuario/tu-repositorio.git
-   cd tu-repositorio
-   ```
+```bash
+git clone [URL_DEL_REPO]
+cd bot-vendedores
+```
 
 2. Instala las dependencias:
-   ```bash
-   npm install
-   ```
-
-3. Configura las variables de entorno:
-   ```bash
-   cp config/.env.example config/.env
-   ```
-
-4. Edita el archivo `.env` con tus configuraciones.
-
-## ⚙️ Configuración
-
-### Variables de entorno importantes
-
-- `SESSION_NAME`: Nombre de la sesión del bot (por defecto: 'bot-vendedor')
-- `ALLOWED_GROUPS`: Nombres de los grupos permitidos, separados por comas
-- `CHROME_PATH`: Ruta al ejecutable de Chrome/Chromium (opcional)
-- `NODE_ENV`: Entorno de ejecución ('development' o 'production')
-
-### Configuración de grupos
-
-Edita la variable `ALLOWED_GROUPS` en el archivo `.env` para especificar los grupos donde el bot estará activo.
-
-## 🚦 Iniciar el bot
-
-### Modo desarrollo (con reinicio automático):
 ```bash
-npm run dev
+npm install
 ```
 
-### Modo producción:
+3. Copia el archivo `.env.example` a `.env` y configúralo según tus necesidades:
 ```bash
-npm run prod
+cp .env.example .env
 ```
 
-### Inicio normal:
+4. Inicia el bot:
 ```bash
 npm start
 ```
 
-## 📝 Comandos disponibles
+## 📱 Uso en GitHub Codespaces
 
-- `!ayuda` - Muestra la lista de comandos
-- `!agregar [nombre] [teléfono]` - Registra un nuevo vendedor
-- `!lista` - Muestra la lista de vendedores
-- `!reporte` - Genera un reporte de ventas
-- `!sticker` - Crea un sticker a partir de una imagen
+El bot está optimizado para funcionar en GitHub Codespaces. Detecta automáticamente la ruta de Chrome/Chromium y maneja correctamente los directorios.
 
-## 🐛 Solución de problemas
+## 🔐 Seguridad
 
-### Problemas comunes
+- Validación de números de teléfono
+- Sistema de bloqueo/desbloqueo de vendedores
+- Protección contra múltiples instancias
+- Logs de todas las interacciones
 
-1. **Error de sesión**:
-   - Elimina la carpeta `tokens` y vuelve a iniciar el bot
+## 📝 Contribución
 
-2. **Error al iniciar Chrome**:
-   - Asegúrate de tener Chrome/Chromium instalado
-   - Especifica la ruta correcta en `CHROME_PATH`
-
-3. **El bot no responde en el grupo**:
-   - Verifica que el nombre del grupo coincida exactamente con `ALLOWED_GROUPS`
-   - Asegúrate de que el bot tenga permisos de administrador
-
-## 🤝 Contribuir
-
-Las contribuciones son bienvenidas. Por favor, lee las [pautas de contribución](CONTRIBUTING.md) antes de enviar cambios.
+¡Contribuciones son bienvenidas! Por favor, crea un issue o pull request para sugerir mejoras o reportar bugs.
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Ver el archivo [LICENSE](LICENSE) para más detalles.
-
----
-
-Hecho con ❤️ por [Tu Nombre]-vendedores
+MIT License - Joel David
