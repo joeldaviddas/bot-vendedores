@@ -1,5 +1,5 @@
 const fs = require('fs');
-const { obtenerFechaLocal, guardarBase, database } = require('./utils');
+const { obtenerFechaLocal, guardarBase, database } = require('../utils/utils');
 
 function registrarVenta(cliente, monto, vendedorName) {
   database.ventas.push({

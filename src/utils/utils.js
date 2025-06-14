@@ -1,7 +1,8 @@
 // utils.js — Funciones utilitarias comunes
 const fs = require('fs');
 
-const DATA_FILE = './data.json';
+const path = require('path');
+const DATA_FILE = path.join(__dirname, '../data/data.json');
 
 const database = {
   ventas: [],

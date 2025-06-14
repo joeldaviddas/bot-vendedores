@@ -1,7 +1,7 @@
 // bot.js — Bot con espera dinámica y carga confiable de grupos (ahora configurable y con múltiples grupos)
-require('dotenv').config();
-const wppconnect = require('@wppconnect-team/wppconnect');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../config/.env') });
+const wppconnect = require('@wppconnect-team/wppconnect');
 const fs = require('fs');
 
 const { cargarBase, logError, obtenerFechaLocal, database } = require('../utils/utils');

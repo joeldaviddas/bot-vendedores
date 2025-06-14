@@ -1,6 +1,7 @@
 // bot.js — Archivo principal del bot modularizado
-const wppconnect = require('@wppconnect-team/wppconnect');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../../config/.env') });
+const wppconnect = require('@wppconnect-team/wppconnect');
 const fs = require('fs');
 
 const { cargarBase, logError, obtenerFechaLocal, database } = require('../utils/utils');

@@ -1,5 +1,5 @@
 // vendedores.js — Gestión de vendedores
-const { database, guardarBase } = require('./utils');
+const { database, guardarBase } = require('../utils/utils');
 
 function agregarVendedor(nombre, telefono) {
   const idWhatsApp = `${telefono}@c.us`;

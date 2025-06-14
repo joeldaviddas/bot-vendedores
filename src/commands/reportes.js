@@ -1,5 +1,5 @@
 // reportes.js — Gestión de reportes
-const { database, guardarBase, obtenerFechaLocal } = require('./utils');
+const { database, guardarBase, obtenerFechaLocal } = require('../utils/utils');
 
 function agregarReporte(numero, motivo) {
   database.reportes.push({
