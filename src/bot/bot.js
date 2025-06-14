@@ -1,8 +1,19 @@
 // bot.js — Archivo principal del bot modularizado
 const path = require('path');
+const os = require('os');
 require('dotenv').config({ path: path.join(__dirname, '../../config/.env') });
-const wppconnect = require('@wppconnect-team/wppconnect');
 const fs = require('fs');
+
+// Configuración de rutas
+const TOKENS_DIR = path.join(__dirname, '../../tokens');
+const SESSION_DIR = path.join(TOKENS_DIR, 'bot-vendedor');
+
+// Crear directorio de tokens si no existe
+if (!fs.existsSync(TOKENS_DIR)) {
+  fs.mkdirSync(TOKENS_DIR, { recursive: true });
+}
+
+const wppconnect = require('@wppconnect-team/wppconnect');
 
 const { cargarBase, logError, obtenerFechaLocal, database } = require('../utils/utils');
 const { ejecutarComando } = require('../commands/comandos');
@@ -21,13 +32,61 @@ let lastImageByUser = {};
 
 cargarBase();
 
+// Eliminar sesión anterior si existe
+if (fs.existsSync(SESSION_DIR)) {
+  console.warn('🧹 Eliminando sesión anterior para evitar conflictos...');
+  fs.rmSync(SESSION_DIR, { recursive: true, force: true });
+}
+
 wppconnect.create({
   session: SESSION_NAME,
   headless: true,
-  protocolTimeout: 60000,
+  devtools: false,
+  useChrome: true,
+  logQR: true,
+  disableWelcome: true,
+  updatesLog: true,
+  autoClose: 60000,
+  createPathFileToken: true,
+  waitForLogin: true,
+  debug: false,
+  browserWS: '',
+  browserArgs: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-accelerated-2d-canvas',
+    '--no-first-run',
+    '--no-zygote',
+    '--single-process',
+    '--disable-gpu',
+    '--disable-notifications',
+    '--disable-web-security',
+    '--disable-extensions',
+    '--disable-infobars',
+    '--window-size=1024,768',
+    '--start-maximized'
+  ],
   puppeteerOptions: {
-    executablePath: CHROME_PATH,
-    args: ['--no-sandbox']
+    executablePath: CHROME_PATH || undefined,
+    headless: true,
+    defaultViewport: null,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu',
+      '--disable-notifications',
+      '--disable-web-security',
+      '--disable-extensions',
+      '--disable-infobars',
+      '--window-size=1024,768',
+      '--start-maximized'
+    ]
   }
 }).then(async client => {
   global.client = client;
