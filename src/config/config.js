@@ -2,7 +2,13 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs-extra';
 
-dotenv.config();
+// Configurar dotenv
+const envPath = path.join(process.cwd(), '.env');
+if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+} else {
+    console.warn('Archivo .env no encontrado. Usando valores por defecto.');
+}
 
 const CONFIG = {
     // Directorios
@@ -30,31 +36,40 @@ const CONFIG = {
 
 // Crear directorios si no existen
 async function createDirectories() {
-    try {
-        const dirs = Object.values(CONFIG.directories);
-        for (const dir of dirs) {
-            await fs.ensureDir(path.resolve(__dirname, '..', dir));
+    const rootDir = path.dirname(new URL(import.meta.url).pathname);
+    const dirs = Object.values(CONFIG.directories);
+
+    for (const dir of dirs) {
+        const fullPath = path.join(rootDir, dir);
+        try {
+            await fs.ensureDir(fullPath);
+            console.log(`Directorio creado: ${fullPath}`);
+        } catch (error) {
+            console.error(`Error al crear directorio ${fullPath}:`, error);
         }
-    } catch (error) {
-        console.error('Error al crear directorios:', error);
-        throw error;
     }
 }
 
 // Inicializar base de datos
 async function initDatabase() {
     try {
-        const dbPath = path.resolve(__dirname, '..', CONFIG.directories.data, 'database.json');
+        const rootDir = path.dirname(new URL(import.meta.url).pathname);
+        const dbPath = path.join(rootDir, CONFIG.directories.data, 'database.json');
+        
         if (!await fs.pathExists(dbPath)) {
             await fs.writeJSON(dbPath, {
                 vendedores: [],
-                bloqueados: [],
-                logs: [],
-                lastImages: {}
+                estadisticas: {
+                    mensajes: 0,
+                    imagenes: 0,
+                    interacciones: 0,
+                    ultimaInteraccion: null
+                },
+                ultimaActualizacion: new Date().toISOString()
             });
         }
     } catch (error) {
-        console.error('Error al inicializar base de datos:', error);
+        console.error('Error al inicializar la base de datos:', error);
         throw error;
     }
 }

@@ -1,19 +1,25 @@
 {
-  "name": "vendedor-bot",
+  "name": "bot-vendedores",
   "version": "1.0.0",
-  "type": "module",
-  "description": "Bot de WhatsApp para gestión de vendedores y clientes en grupos de streaming",
+  "description": "Bot de WhatsApp para gestión de vendedores de streaming",
   "main": "src/start.js",
   "scripts": {
     "start": "node src/start.js",
     "dev": "nodemon src/start.js"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
   "dependencies": {
-    "@wppconnect-team/wppconnect": "^1.16.0",
+    "@wppconnect-team/wppconnect": "^1.19.0",
     "dotenv": "^16.3.1",
-    "fs-extra": "^11.1.1",
-    "path": "^0.12.7",
-    "sharp": "^0.33.2"
+    "fs-extra": "^11.2.0",
+    "sharp": "^0.32.6",
+    "winston": "^3.11.0",
+    "moment": "^2.29.4",
+    "node-fetch": "^3.3.2",
+    "node-cron": "^3.0.6"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
