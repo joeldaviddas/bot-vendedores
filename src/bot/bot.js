@@ -1,87 +1,19 @@
 import fs from 'fs-extra';
 import path from 'path';
 import qrcode from 'qrcode-terminal';
+import wppconnect from '@wppconnect-team/wppconnect';
+import cron from 'node-cron';
 import { Database } from '../utils/database.js';
 import { MessageHandler } from '../utils/messageHandler.js';
 import { CommandHandler } from '../commands/commandHandler.js';
-import wppconnect from '@wppconnect-team/wppconnect/dist/wppconnect.cjs';
 import { CONFIG } from '../config/config.js';
 
 export class Bot {
     constructor() {
-        this.client = new wppconnect.Client({
-            session: CONFIG.wpp.sessionId,
-            headless: true,
-            retryQR: CONFIG.wpp.maxRetries,
-            qrTimeout: CONFIG.wpp.qrTimeout,
-            browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
-            logQR: true,
-            statusFind: true,
-            statusFindTimeout: 30000,
-            killProcess: true,
-            killProcessTimeout: 20000,
-            waitForLogin: true,
-            waitForLoginTimeout: 60000,
-            waitForConnection: true,
-            waitForConnectionTimeout: 60000,
-            waitForMessage: true,
-            waitForMessageTimeout: 60000,
-            waitForMessageSent: true,
-            waitForMessageSentTimeout: 60000
-        });
-
-        // Eventos del cliente
-        this.client.on('qr', (qr) => {
-            console.log('QR generado. Escanea con tu teléfono WhatsApp:');
-            qrcode.generate(qr, { small: true });
-        });
-
-        this.client.on('ready', () => {
-            console.log('Bot conectado y listo');
-        });
-
-        this.client.on('message', async (message) => {
-            try {
-                await this.messageHandler.handleNewMessage(message, this.client);
-            } catch (error) {
-                console.error('Error al procesar mensaje:', error);
-            }
-        });
-
-        this.client.on('error', (error) => {
-            console.error('Error del cliente:', error);
-        });
-
-        this.client.on('disconnected', () => {
-            console.log('Bot desconectado');
-        });
-
-        // Inicializar cliente
-        this.client.initialize();
-
-        // Eventos del cliente
-        this.client.on('ready', () => {
-            console.log('Bot conectado y listo');
-        });
-
-        this.client.on('message', async (message) => {
-            try {
-                await this.messageHandler.handleNewMessage(message, this.client);
-            } catch (error) {
-                console.error('Error al procesar mensaje:', error);
-            }
-        });
-
-        this.client.on('error', (error) => {
-            console.error('Error del cliente:', error);
-        });
-
-        this.client.on('disconnected', () => {
-            console.log('Bot desconectado');
-        });
         this.db = new Database();
         this.messageHandler = new MessageHandler();
         this.commandHandler = new CommandHandler();
+        this.client = null;
         this.isRunning = false;
     }
 
@@ -92,54 +24,93 @@ export class Bot {
                 return;
             }
 
-            await this.client.initialize();
+            const tokenDir = path.resolve('./tokens', CONFIG.wpp.sessionId);
+            const lockPath = path.join(tokenDir, 'SingletonLock');
+            if (await fs.pathExists(lockPath)) {
+                await fs.remove(lockPath);
+                console.warn('⚠️ Archivo SingletonLock eliminado para evitar conflictos de navegador.');
+            }
+
+            const session = await wppconnect.create({
+                session: CONFIG.wpp.sessionId,
+                headless: false, // Para ver el navegador
+                retryQR: CONFIG.wpp.maxRetries,
+                qrTimeout: CONFIG.wpp.qrTimeout,
+                browserArgs: ['--no-sandbox', '--disable-setuid-sandbox'],
+                logQR: true,
+                killProcess: true,
+                waitForLogin: true,
+                waitForConnection: true,
+                waitForMessage: true,
+                waitForMessageSent: true
+            });
+
+            this.client = session;
+            this.setupEvents();
+            this.scheduleDailyReminder();
             this.isRunning = true;
 
-            // Evento de conexión
-            this.client.on('ready', () => {
-                console.log('Bot conectado y listo para usar.');
-            });
-
-            // Evento de mensaje
-            this.client.on('message', async message => {
-                try {
-                    // Verificar si es un mensaje de grupo
-                    if (message.isGroup) {
-                        // Verificar si es el grupo permitido
-                        const groupInfo = await this.client.getGroupInfo(message.from);
-                        if (groupInfo.title === CONFIG.groupPermitted) {
-                            await this.handleGroupMessage(message);
-                        } else {
-                            console.log(`Mensaje ignorado - Grupo no permitido: ${groupInfo.title}`);
-                            return;
-                        }
-                    } else {
-                        // Manejar mensajes privados
-                        await this.handlePrivateMessage(message);
-                    }
-                } catch (error) {
-                    console.error('Error al procesar mensaje:', error);
-                    await this.client.sendText(message.from, CONFIG.messages.error);
-                }
-            });
-
-            // Evento de desconexión
-            this.client.on('disconnected', () => {
-                console.log('Bot desconectado. Intentando reconectar...');
-                this.isRunning = false;
-            });
-
         } catch (error) {
-            console.error('Error al iniciar el bot:', error);
+            console.error('❌ Error al iniciar el bot:', error);
             throw error;
         }
+    }
+
+    setupEvents() {
+        this.client.on('qr', (qr) => {
+            console.log('📲 Escanea este código QR para iniciar sesión:');
+            qrcode.generate(qr, { small: true });
+        });
+
+        this.client.on('ready', async () => {
+            console.log('✅ Bot conectado y listo.');
+            try {
+                const groups = await this.client.getAllGroups();
+                const group = groups.find(g => g.name === CONFIG.groupPermitted);
+                if (group) {
+                    await this.client.sendText(group.id._serialized, '🤖 ¡El bot se ha iniciado correctamente!');
+                    console.log('📢 Mensaje de bienvenida enviado al grupo.');
+                } else {
+                    console.warn('⚠️ Grupo no encontrado para enviar mensaje de inicio.');
+                }
+            } catch (error) {
+                console.error('❌ Error al enviar mensaje de inicio al grupo:', error);
+            }
+        });
+
+        this.client.on('message', async (message) => {
+            try {
+                if (message.isGroup) {
+                    const groupInfo = await this.client.getGroupInfo(message.from);
+                    if (groupInfo.title === CONFIG.groupPermitted) {
+                        await this.handleGroupMessage(message);
+                    } else {
+                        console.log(`📭 Mensaje ignorado de grupo no permitido: ${groupInfo.title}`);
+                    }
+                } else {
+                    await this.handlePrivateMessage(message);
+                }
+            } catch (error) {
+                console.error('❌ Error al procesar mensaje:', error);
+                await this.client.sendText(message.from, CONFIG.messages.error);
+            }
+        });
+
+        this.client.on('disconnected', () => {
+            console.log('⚠️ Bot desconectado. Esperando reconexión...');
+            this.isRunning = false;
+        });
+
+        this.client.on('error', (error) => {
+            console.error('❌ Error del cliente:', error);
+        });
     }
 
     async handleGroupMessage(message) {
         try {
             const groupInfo = await this.client.getGroupInfo(message.from);
             if (groupInfo.title !== CONFIG.groupPermitted) {
-                console.log(`Mensaje ignorado - Grupo no permitido: ${groupInfo.title}`);
+                console.log(`📭 Grupo ignorado: ${groupInfo.title}`);
                 return;
             }
 
@@ -149,7 +120,7 @@ export class Bot {
                 await this.messageHandler.handleNewMessage(message, this.client);
             }
         } catch (error) {
-            console.error('Error al manejar mensaje de grupo:', error);
+            console.error('❌ Error en mensaje de grupo:', error);
             await this.client.sendText(message.from, CONFIG.messages.error);
         }
     }
@@ -158,7 +129,7 @@ export class Bot {
         try {
             await this.commandHandler.handleCommand(message, this.client, this.db);
         } catch (error) {
-            console.error('Error al manejar mensaje privado:', error);
+            console.error('❌ Error en mensaje privado:', error);
             await this.client.sendText(message.from, CONFIG.messages.error);
         }
     }
@@ -168,5 +139,27 @@ export class Bot {
             await this.client.close();
         }
         this.isRunning = false;
+    }
+
+    scheduleDailyReminder() {
+        cron.schedule('0 8 * * *', async () => {
+            try {
+                const groups = await this.client.getAllGroups();
+                const targetGroup = groups.find(group => group.name === CONFIG.groupPermitted);
+                if (targetGroup) {
+                    await this.client.sendText(
+                        targetGroup.id._serialized,
+                        '📣 ¡Recuerda registrar tus ventas del día! Usa /verificar para reportarlas. ✅'
+                    );
+                    console.log('📤 Recordatorio diario enviado.');
+                } else {
+                    console.warn('⚠️ Grupo autorizado no encontrado para enviar recordatorio.');
+                }
+            } catch (error) {
+                console.error('❌ Error al enviar recordatorio automático:', error);
+            }
+        }, {
+            timezone: 'America/Bogota'
+        });
     }
 }

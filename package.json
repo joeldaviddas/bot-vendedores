@@ -1,16 +1,25 @@
 {
   "name": "bot-vendedores",
   "version": "1.0.0",
-  "description": "Bot de WhatsApp para gestión de vendedores de streaming",
+  "description": "Bot de WhatsApp para gestión de vendedores de plataformas de streaming, automatización de comandos y reportes.",
   "main": "src/start.js",
+  "type": "module",
+  "author": "Joel David De Arco",
+  "license": "ISC",
+  "keywords": [
+    "whatsapp",
+    "bot",
+    "wppconnect",
+    "vendedores",
+    "automatización",
+    "streaming",
+    "nodejs"
+  ],
   "scripts": {
     "start": "node src/start.js",
-    "dev": "nodemon src/start.js"
+    "dev": "nodemon src/start.js",
+    "clean": "rm -rf node_modules package-lock.json"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@wppconnect-team/wppconnect": "^1.19.0",
     "dotenv": "^16.3.1",
@@ -19,7 +28,7 @@
     "winston": "^3.11.0",
     "moment": "^2.29.4",
     "node-fetch": "^3.3.2",
-    "node-cron": "^3.0.6"
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

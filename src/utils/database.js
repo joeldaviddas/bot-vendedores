@@ -1,5 +1,11 @@
 import fs from 'fs-extra';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import { CONFIG } from '../config/config.js';
+
+// Simular __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export class Database {
     constructor() {
@@ -8,178 +14,113 @@ export class Database {
     }
 
     async init() {
-        try {
-            if (!this.db) {
+        if (!this.db) {
+            try {
                 this.db = await fs.readJSON(this.dbPath);
+            } catch {
+                // Si no existe, lo inicializamos vacío
+                this.db = {
+                    vendedores: [],
+                    bloqueados: [],
+                    logs: [],
+                    lastImages: {}
+                };
+                await fs.writeJSON(this.dbPath, this.db);
             }
-            return this.db;
-        } catch (error) {
-            console.error('Error al inicializar base de datos:', error);
-            throw error;
         }
+        return this.db;
+    }
+
+    async save() {
+        await fs.writeJSON(this.dbPath, this.db);
     }
 
     async saveLastImage(sender, imageUrl) {
-        try {
-            await this.init();
-            this.db.lastImages[sender] = imageUrl;
-            await fs.writeJSON(this.dbPath, this.db);
-        } catch (error) {
-            console.error('Error al guardar imagen:', error);
-            throw error;
-        }
+        await this.init();
+        this.db.lastImages[sender] = imageUrl;
+        await this.save();
     }
 
     async getLastImage(sender) {
-        try {
-            await this.init();
-            return this.db.lastImages[sender];
-        } catch (error) {
-            console.error('Error al obtener imagen:', error);
-            throw error;
-        }
+        await this.init();
+        return this.db.lastImages[sender];
     }
 
     async registrarVendedor(nombre, numero) {
-        try {
-            await this.init();
-            
-            // Verificar si ya existe
-            const existe = this.db.vendedores.some(v => v.numero === numero);
-            if (existe) {
-                return 'Este número ya está registrado.';
-            }
+        await this.init();
 
-            // Validar número y obtener información del país
-            const validacion = await this.validatePhoneNumber(numero);
-            if (!validacion.isValid) {
-                return validacion.error;
-            }
-
-            // Verificar si está bloqueado
-            if (this.db.bloqueados.includes(numero)) {
-                return 'Este número está bloqueado.';
-            }
-
-            // Registrar con información del país
-            this.db.vendedores.push({
-                nombre,
-                numero,
-                pais: validacion.country,
-                codigoPais: validacion.countryCode,
-                categoria: CONFIG.categoriaDefault,
-                fechaRegistro: new Date().toISOString(),
-                estado: 'activo',
-                estadisticas: {
-                    mensajes: 0,
-                    imagenes: 0,
-                    interacciones: 0,
-                    ultimaInteraccion: null
-                }
-            });
-
-            // Guardar cambios
-            await this.save();
-            return `Vendedor registrado exitosamente. País: ${validacion.country}`;
-        } catch (error) {
-            console.error('Error al registrar vendedor:', error);
-            throw error;
+        if (this.db.vendedores.some(v => v.numero === numero)) {
+            return 'Este número ya está registrado.';
         }
+
+        if (this.db.bloqueados.includes(numero)) {
+            return 'Este número está bloqueado.';
+        }
+
+        this.db.vendedores.push({
+            nombre,
+            numero,
+            categoria: CONFIG.categoriaDescriptions.default,
+            fechaRegistro: new Date().toISOString(),
+            estado: 'activo',
+            estadisticas: {
+                mensajes: 0,
+                imagenes: 0,
+                interacciones: 0,
+                ultimaInteraccion: null
+            }
+        });
+
+        await this.save();
+        return `Vendedor registrado exitosamente. Número: ${numero}`;
     }
 
     async bloquearVendedor(numero) {
-        try {
-            await this.init();
-            
-            // Verificar si ya está bloqueado
-            if (this.db.bloqueados.includes(numero)) {
-                return 'Este vendedor ya está bloqueado.';
-            }
+        await this.init();
+        if (this.db.bloqueados.includes(numero)) return 'Este vendedor ya está bloqueado.';
+        if (!this.db.vendedores.some(v => v.numero === numero)) return 'No se encontró ningún vendedor con ese número.';
 
-            // Verificar si existe
-            const existe = this.db.vendedores.some(v => v.numero === numero);
-            if (!existe) {
-                return 'No se encontró ningún vendedor con ese número.';
-            }
-
-            // Bloquear vendedor
-            this.db.bloqueados.push(numero);
-            await fs.writeJSON(this.dbPath, this.db);
-            
-            return `Vendedor ${numero} bloqueado exitosamente.`;
-        } catch (error) {
-            console.error('Error al bloquear vendedor:', error);
-            throw error;
-        }
+        this.db.bloqueados.push(numero);
+        await this.save();
+        return `Vendedor ${numero} bloqueado exitosamente.`;
     }
 
     async desbloquearVendedor(numero) {
-        try {
-            await this.init();
-            
-            // Verificar si está bloqueado
-            const index = this.db.bloqueados.indexOf(numero);
-            if (index === -1) {
-                return 'Este vendedor no está bloqueado.';
-            }
+        await this.init();
+        const index = this.db.bloqueados.indexOf(numero);
+        if (index === -1) return 'Este vendedor no está bloqueado.';
 
-            // Desbloquear vendedor
-            this.db.bloqueados.splice(index, 1);
-            await fs.writeJSON(this.dbPath, this.db);
-            
-            return `Vendedor ${numero} desbloqueado exitosamente.`;
-        } catch (error) {
-            console.error('Error al desbloquear vendedor:', error);
-            throw error;
-        }
+        this.db.bloqueados.splice(index, 1);
+        await this.save();
+        return `Vendedor ${numero} desbloqueado exitosamente.`;
     }
 
     async obtenerListaVendedores() {
-        try {
-            await this.init();
-            const lista = this.db.vendedores.map(v => `${v.nombre} (${v.numero})`).join('\n');
-            return `Lista de vendedores:\n${lista}`;
-        } catch (error) {
-            console.error('Error al obtener lista de vendedores:', error);
-            throw error;
-        }
+        await this.init();
+        return `Lista de vendedores:\n` +
+            this.db.vendedores.map(v => `${v.nombre} (${v.numero})`).join('\n');
     }
 
     async obtenerVendedoresPorNombre(nombre) {
-        try {
-            await this.init();
-            return this.db.vendedores.filter(v => 
-                v.nombre.toLowerCase().includes(nombre.toLowerCase())
-            );
-        } catch (error) {
-            console.error('Error al buscar vendedores por nombre:', error);
-            throw error;
-        }
+        await this.init();
+        return this.db.vendedores.filter(v =>
+            v.nombre.toLowerCase().includes(nombre.toLowerCase())
+        );
     }
 
     async obtenerVendedoresActivos() {
-        try {
-            await this.init();
-            return this.db.vendedores.filter(v => !this.db.bloqueados.includes(v.numero));
-        } catch (error) {
-            console.error('Error al obtener vendedores activos:', error);
-            throw error;
-        }
+        await this.init();
+        return this.db.vendedores.filter(v => !this.db.bloqueados.includes(v.numero));
     }
 
     async logMessage(message) {
-        try {
-            await this.init();
-            this.db.logs.push({
-                from: message.from,
-                body: message.body,
-                type: message.type,
-                timestamp: new Date().toISOString()
-            });
-            await fs.writeJSON(this.dbPath, this.db);
-        } catch (error) {
-            console.error('Error al registrar mensaje:', error);
-            throw error;
-        }
+        await this.init();
+        this.db.logs.push({
+            from: message.from,
+            body: message.body,
+            type: message.type,
+            timestamp: new Date().toISOString()
+        });
+        await this.save();
     }
 }
